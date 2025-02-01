@@ -23,6 +23,7 @@ public class tools {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(text);
         StringBuilder z = new StringBuilder();
+
         while (matcher.find()) {
             if (!matcher.group().equals("")) {
                 z.append(matcher.group());
