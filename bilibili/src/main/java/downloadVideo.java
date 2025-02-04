@@ -44,7 +44,6 @@ public class downloadVideo {
 
     static {
         String cookie = Props.getStr("cookie");
-        System.out.println(cookie);
         String user_Agent = Props.getStr("User_Agent");
 
         downLoadPath = Props.getStr("downLoadPath");
@@ -93,9 +92,18 @@ public class downloadVideo {
                             String audio = stringStringMap.get("audio");
                             Map<String, String> videomap = httpUtil.getfileName(video, headers);
                             Map<String, String> audiomap = httpUtil.getfileName(audio, headers);
-                            double length = new Double(videomap.get("Length")) + new Double(audiomap.get("Length"));
-                            String property = System.getProperty("user.dir") + "\\" + "ffmpeg-master-latest-win64-gpl" +
-                                    "-shared\\bin\\ffmpeg.exe";
+                            double length =
+                                    Double.parseDouble(videomap.get("Length")) + Double.parseDouble(audiomap.get(
+                                    "Length"));
+                            
+                            /*String property = System.getProperty("user.dir") + "\\" +
+                            "ffmpeg-master-latest-win64-gpl" +
+                                    "-shared\\bin\\ffmpeg.exe";*/
+                            String property = Props.getStr("ffmpegPath");
+                            if (property.isBlank()) {
+                                property = System.getProperty("user.dir") + "\\" + "ffmpeg-master-latest-win64-gpl" +
+                                        "-shared\\bin\\ffmpeg.exe";
+                            }
 
                             String videopath = tempPath + "\\" + videomap.get("Name") + "." + videomap.get("Type");
                             String audiopath = tempPath + "\\" + audiomap.get("Name") + "." + audiomap.get("Type");
@@ -112,7 +120,7 @@ public class downloadVideo {
 
                                 String fspeed = String.format("%.2f", speed / 1048576);
                                 String flength = String.format("%.2f", (length / 1048576));
-                              //  String fremainSize = String.format("%.1f", remainSize / speed / 60);
+                                //  String fremainSize = String.format("%.1f", remainSize / speed / 60);
                                /* if ("Infinity".equalsIgnoreCase(fremainSize)) {
                                     fremainSize = "-";
                                 }*/
@@ -225,6 +233,9 @@ public class downloadVideo {
             Elements select = parse.select("#app > div.video-container-v1 > div.right-container" +
                     ".is-in-large-ab > div > div.base-video-sections-v1 > div.video-sections-head > div" +
                     ".video-sections-head_second-line > button");
+
+            //#app > div.video-container-v1 > div.right-container.is-in-large-ab > div > div.base-video-sections-v1 >
+            // div.video-sections-head > div.video-sections-head_second-line > button
             if (!select.text().equals("")) {
                 String name = parse.select("#app > div.video-container-v1 > div.right-container.is-in-large-ab >" +
                         " div " +
@@ -243,6 +254,8 @@ public class downloadVideo {
                     String s =
                             httpUtil.get("https://api.bilibili.com/x/polymer/web-space/seasons_series_list?mid=" + mid +
                                     "&page_num=" + page + "&page_size=20");
+                    System.out.println("https://api.bilibili.com/x/polymer/web-space/seasons_series_list?mid=" + mid +
+                            "&page_num=" + page + "&page_size=20");
                     JsonNode jsonNode = objectMapper.readValue(s, JsonNode.class);
                     JsonNode jsonNode1 = jsonNode.get("data").get("items_lists");
                     total = jsonNode1.get("page").get("total").intValue();
@@ -256,6 +269,11 @@ public class downloadVideo {
                             int total2;
                             do {
                                 String s2 = httpUtil.get("https://api.bilibili" +
+                                        ".com/x/polymer/web-space/seasons_archives_list?mid" +
+                                        "=" + mid + "&season_id=" + season_id + "&sort_reverse=false&page_num=" + page2 +
+                                        "&page_size" +
+                                        "=100");
+                                System.out.println("https://api.bilibili" +
                                         ".com/x/polymer/web-space/seasons_archives_list?mid" +
                                         "=" + mid + "&season_id=" + season_id + "&sort_reverse=false&page_num=" + page2 +
                                         "&page_size" +
@@ -283,9 +301,9 @@ public class downloadVideo {
         return mapList;
     }
 
-    boolean b = true;
 
     public List<Map<String, String>> VideoPath(String bvid) {
+        boolean b = true;
         //httpUtils.setReqHeaders(headers);
         String url1 = "https://api.bilibili.com/x/player/pagelist?bvid=" + bvid + "&jsonp=jsonp";
         List<Map<String, String>> mapList = new ArrayList<Map<String, String>>();
@@ -303,11 +321,13 @@ public class downloadVideo {
                 String s = httpUtil.get(url2);
                 JsonNode jsonNode1 = objectMapper.readValue(s, JsonNode.class);
                 JsonNode data1 = jsonNode1.get("data");
-                if (b) {
+                boolean autologin = Boolean.valueOf(Props.getStr("autologin"));
+                if (b && autologin) {
                     int quality = data1.get("quality").intValue();
                     if (quality < 80) {
                         b = false;
                         int quality2 = data1.get("support_formats").get(0).get("quality").intValue();
+                        System.out.println(quality + " , " + quality2);
                         if (quality < quality2) {
                             System.out.println("当前不是最高画质,手动登入获取最新Cookie");
                             headers.remove(0);
@@ -363,11 +383,8 @@ public class downloadVideo {
             page.navigate("https://www.bilibili.com/");
             page.evaluate("document.querySelector(\"#i_cecream > div.bili-feed4 > div.bili-header.large-header > div" +
                     ".bili-header__bar > ul.right-entry > li:nth-child(1) > li > div > div > span\").click()");
-            try {
-                TimeUnit.SECONDS.sleep(2);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            page.waitForLoadState();
+
             page.locator("body > div.bili-mini-mask > div > div.bili-mini-login-right-wp > div.login-pwd-wp > form > " +
                     "div:nth-child(1) > input[type=text]").fill(username);
 
@@ -379,11 +396,11 @@ public class downloadVideo {
 
             page.waitForSelector("body > div.bili-mini-mask > div.all-icon.play._nO",
                     new Page.WaitForSelectorOptions().setState(WaitForSelectorState.HIDDEN));
-            try {
-                TimeUnit.SECONDS.sleep(2);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+
+
+            page.waitForSelector("#i_cecream > div.bili-feed4 > div.bili-header.large-header > div.bili-header__bar >" +
+                            " ul.right-entry > li.v-popover-wrap.header-avatar-wrap",
+                    new Page.WaitForSelectorOptions().setState(WaitForSelectorState.VISIBLE));
             List<Cookie> cookies = browserContext.cookies();
             for (Cookie cookiex : cookies) {
                 cookie.append(cookiex.name).append("=").append(cookiex.value).append(";");

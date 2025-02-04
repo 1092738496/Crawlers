@@ -18,6 +18,7 @@
         <module>footbal_Web</module>
         <module>e-hentai</module>
         <module>XianYu</module>
+        <!--<module>bilibili</module>-->
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

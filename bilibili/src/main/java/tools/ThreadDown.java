@@ -66,7 +66,7 @@ public class ThreadDown extends httpUtils {
             h = 0;
         } catch (ConnectionClosedException | SSLException e) {
             h++;
-            long length = new Long(start) + downsize2;
+            long length = Long.valueOf(start) + downsize2;
             String s = String.valueOf(length);
             return download(Client, url, path, s, end,
                     downSize3, headers);

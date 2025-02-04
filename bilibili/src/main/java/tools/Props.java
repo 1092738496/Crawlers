@@ -22,8 +22,8 @@ public class Props {
     }
 
     public static void in_file(String cookie) {
-        /*String Path = System.getProperty("user.dir")+ "\\Settings.properties";
-        cn.hutool.setting.dialect.Props props = new cn.hutool.setting.dialect.Props(Path);*/
+        /*String path = System.getProperty("user.dir")+ "\\Settings.properties";
+        cn.hutool.setting.dialect.Props props = new cn.hutool.setting.dialect.Props(path);*/
 
         String path = Props.class.getClassLoader().getResource("Settings.properties").getPath();
         cn.hutool.setting.dialect.Props props = new cn.hutool.setting.dialect.Props(path);
@@ -32,7 +32,6 @@ public class Props {
         properties.setProperty("cookie", cookie);
         try {
              properties.store(new FileOutputStream(path), null); // 【存储的是汉字的unicode编码】
-            //properties.store(new FileOutputStream(Path), null); // 【存储的是汉字的unicode编码】
         } catch (IOException e) {
             e.printStackTrace();
         }
